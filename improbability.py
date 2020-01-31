@@ -6,6 +6,7 @@ import sys
 import time
 import matplotlib.pyplot as plt
 from matplotlib import style
+import multiprocessing
 
 
 def animate(improb_fact):
@@ -38,7 +39,7 @@ def norm_improb(a, b, c):
 		average = avg / len(improbs)
 
 		if args.verbose:
-			print("Improbability Jump:", b, "Improbability Factor:", average)
+			print("Improbability Jump: " + str(b) + " Improbability Factor: " + str(average))
 
 	if (a - b) > c:
 		new = []
@@ -55,10 +56,8 @@ def norm_improb(a, b, c):
 
 		average = avg / len(improbs)
 
-		bigskew += 1
-
 		if args.verbose:
-			print("Improbability Skew (Big):", c, "Improbability Factor:", average)
+			print("Improbability Skew (Big): " + str(c) + " Improbability Factor: " + str(average))
 
 	if (a - b) < c:
 		new = []
@@ -75,10 +74,8 @@ def norm_improb(a, b, c):
 
 		average = avg / len(improbs)
 
-		smallskew += 1
-
 		if args.verbose:
-			print("Improbability Skew (Small):", c, "Improbability Factor:", average)
+			print("Improbability Skew (Small): " + str(c) + " Improbability Factor: " + str(average))
 
 	if ((a ** 2.0) + (b ** 2.0)) == (c ** 2.0):
 		new = []
@@ -95,10 +92,8 @@ def norm_improb(a, b, c):
 
 		average = avg / len(improbs)
 
-		triskew += 1
-
 		if args.verbose:
-			print("Improbability Skew (Triangle):", c, "Improbability Factor:", average)
+			print("Improbability Skew (Triangle): " + str(c) + " Improbability Factor: " + str(average))
 
 	if "5" in str(a) and "5" in str(b) and "5" in str(c):
 		new = []
@@ -115,10 +110,8 @@ def norm_improb(a, b, c):
 
 		average = avg / len(improbs)
 
-		eskew += 1
-
 		if args.verbose:
-			print("Improbability Skew (E):", c, "Improbability Factor:", average)
+			print("Improbability Skew (E): " + str(c) + " Improbability Factor: " + str(average))
 
 	if a > (a - c + b):
 		new = []
@@ -135,10 +128,8 @@ def norm_improb(a, b, c):
 
 		average = avg / len(improbs)
 
-		alphaskew += 1
-
 		if args.verbose:
-			print("Improbability Skew (Alpha):", (a - c + b), "Improbability Factor:", average)
+			print("Improbability Skew (Alpha): " + str(a - c + b) + " Improbability Factor: " + str(average))
 
 
 def str2bool(v):
@@ -156,15 +147,56 @@ def decision(probability):
 	return rand() < probability
 
 
+def epoch(parts):
+	global iteration, improbs, args
+
+	iteration = 0
+
+	seed(random.randint(0, 20))
+
+	while iteration < (random.randint(0, args.iterations)):
+
+		a = (0 + (rand() * (100000000 - 0)))
+		b = (0 + (rand() * (100000000 - 0)))
+		c = (0 + (rand() * (100000000 - 0)))
+
+		norm_improb(a, b, c)
+
+		if args.graph:
+
+			avg = 0
+			for i in improbs:
+				avg += i
+
+			average = avg / len(improbs)
+
+			animate(average)
+			fig.canvas.draw()
+
+		iteration += 1
+
+	avg = 0
+	for i in improbs:
+		avg += i
+
+	average = avg / len(improbs)
+
+	print(str(iteration) + " iterations for epoch " + str(x) + " ending with an improbability factor of " + str(average))
+
+	parts.append(average)
+
 if __name__ == '__main__':
 	xs = []
 	ys = []
 
 	parts = []
+	procs = []
+
+	print("Number of cpu : ", multiprocessing.cpu_count())
 
 	my_parser = argparse.ArgumentParser(description='Calculate IMPROBABILITY')
 
-	my_parser.add_argument('-i', '--iterations', type=int, help='Calculate improbability for an iteration set or set improbability set for epochs.')
+	my_parser.add_argument('-i', '--iterations', type=int, help='Calculate improbability for an iteration set or set upper bound of improbability set for epochs.')
 	my_parser.add_argument('-e', '--epochs', type=int, help='Calculate improbability for a set of epochs. Requires -i argument.')
 	my_parser.add_argument('-g', '--graph', type=str2bool, nargs='?', const=True, default=False, help="Show Graph.")
 	my_parser.add_argument('-v', '--verbose', type=str2bool, nargs='?', const=True, default=False, help="Print Skews and Jumps.")
@@ -211,7 +243,7 @@ if __name__ == '__main__':
 
 			norm_improb(a, b, c)
 
-			print("[" + str(iteration) + "] iterations... triskew = " + str(triskew) + " bigskew = " + str(bigskew) + " smallskew = " + str(smallskew) + "alphaskew =" + str(alphaskew))
+			print("[" + str(iteration) + "] iterations... triskew = " + str(triskew) + " bigskew = " + str(bigskew) + " smallskew = " + str(smallskew) + " alphaskew =" + str(alphaskew))
 
 			if args.graph:
 				avg = 0
@@ -249,63 +281,31 @@ if __name__ == '__main__':
 			print("No iterations given for epochs... use the -i flag.")
 			sys.exit(0)
 
-		for x in range(0, args.epochs):
+		with multiprocessing.Manager() as manager:
+			parts = manager.list()  # <-- can be shared between processes.
 
-			iteration = 0
+			for x in range(0, args.epochs):
+				proc = multiprocessing.Process(target=epoch, args=(parts,))
+				procs.append(proc)
+				proc.start()
 
-			while iteration < args.iterations:
-
-				a = (0 + (rand() * (100000000 - 0)))
-				b = (0 + (rand() * (100000000 - 0)))
-				c = (0 + (rand() * (100000000 - 0)))
-
-				sys.stdout.write("\033[F")  # Cursor up one line
-				sys.stdout.write("\033[K")  # Clear to the end of lin
-
-				norm_improb(a, b, c)
-
-				print("[" + str(iteration) + "] iterations... triskew = " + str(triskew) + " bigskew = " + str(bigskew) + " smallskew = " + str(smallskew) + "alphaskew =" + str(alphaskew))
-
-				if args.graph:
-
-					avg = 0
-					for i in improbs:
-						avg += i
-
-					average = avg / len(improbs)
-
-					animate(average)
-					fig.canvas.draw()
-
-				iteration += 1
+			for x in procs:
+				x.join()
 
 			avg = 0
-			for i in improbs:
-				avg += i
+			for x in parts:
+				if decision(.5):
+					avg += x
+				else:
+					avg -= x
 
-			average = avg / len(improbs)
+			average = (avg / len(parts))
 
-			sys.stdout.write("\033[F")  # Cursor up one line
-			sys.stdout.write("\033[K")  # Clear to the end of lin
+			print(str(args.epochs) + " epochs ending with an improbability factor of " + str(average))
 
-			print(str(iteration) + " iterations ending with an improbability factor of " + str(average) + "\n")
-
-			parts.append(average)
-
-		avg = 0
-		for x in parts:
-			if decision(.5):
-				avg += x
-			else:
-				avg -= x
-
-		average = (avg / len(parts))
-
-		print(str(args.epochs) + " epochs ending with an improbability factor of " + str(average))
-
-		if args.probability:
-			decision = decision(average)
-			print("Decision:", decision)
+			if args.probability:
+				decision = decision(average)
+				print("Decision:", decision)
 
 	else:
 
@@ -323,7 +323,7 @@ if __name__ == '__main__':
 
 			norm_improb(a, b, c)
 
-			print("[" + str(iteration) + "] iterations... triskew = " + str(triskew) + " bigskew = " + str(bigskew) + " smallskew = " + str(smallskew) + "alphaskew =" + str(alphaskew))
+			print("[" + str(iteration) + "] iterations... triskew = " + str(triskew) + " bigskew = " + str(bigskew) + " smallskew = " + str(smallskew) + " alphaskew =" + str(alphaskew))
 
 			if args.graph:
 
