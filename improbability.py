@@ -27,8 +27,8 @@ def animate(improb_fact):
 	ax1.set_ylim(-0.001, 0.001)
 
 
-def norm_improb(a, b, c):
-	global improbs, bigskew, smallskew, eskew, triskew, args, alphaskew
+def norm_improb(a, b, c, improbs):
+	global bigskew, smallskew, eskew, triskew, args, alphaskew
 
 	if a < b < c:
 		improbs.append(b)
@@ -132,6 +132,8 @@ def norm_improb(a, b, c):
 		if args.verbose:
 			print("Improbability Skew (Alpha): " + str(a - c + b) + " Improbability Factor: " + str(average))
 
+	return improbs
+
 
 def str2bool(v):
 	if isinstance(v, bool):
@@ -161,7 +163,7 @@ def epoch(parts, args):
 		b = (0 + (rand() * (100000000 - 0)))
 		c = (0 + (rand() * (100000000 - 0)))
 
-		norm_improb(a, b, c)
+		norm_improb(a, b, c, improbs)
 
 		if args.graph:
 
@@ -238,7 +240,7 @@ if __name__ == '__main__':
 			sys.stdout.write("\033[F")  # Cursor up one line
 			sys.stdout.write("\033[K")  # Clear to the end of lin
 
-			norm_improb(a, b, c)
+			improbs = norm_improb(a, b, c, improbs)
 
 			print("[" + str(iteration) + "] iterations...")
 
@@ -312,7 +314,7 @@ if __name__ == '__main__':
 			sys.stdout.write("\033[F")  # Cursor up one line
 			sys.stdout.write("\033[K")  # Clear to the end of lin
 
-			norm_improb(a, b, c)
+			improbs = norm_improb(a, b, c, improbs)
 
 			time_diff = dt.datetime.today().timestamp() - start_time
 
