@@ -148,7 +148,8 @@ def decision(probability):
 	return rand() < probability
 
 
-def epoch(parts, args, improbs):
+def epoch(parts, args):
+	improbs = [0]
 
 	iteration = 0
 
@@ -210,11 +211,6 @@ if __name__ == '__main__':
 	c = 2
 
 	improbs = [0]
-	triskew = 0
-	bigskew = 0
-	smallskew = 0
-	eskew = 0
-	alphaskew = 0
 
 	args = my_parser.parse_args()
 
@@ -276,7 +272,7 @@ if __name__ == '__main__':
 			parts = manager.list()  # <-- can be shared between processes.
 
 			for x in range(0, args.epochs):
-				proc = multiprocessing.Process(target=epoch, args=(parts, args, improbs,))
+				proc = multiprocessing.Process(target=epoch, args=(parts, args,))
 				procs.append(proc)
 				proc.start()
 
