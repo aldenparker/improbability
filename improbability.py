@@ -4,6 +4,7 @@ import random
 import argparse
 import sys
 import time
+import datetime as dt
 import matplotlib.pyplot as plt
 from matplotlib import style
 import multiprocessing
@@ -243,17 +244,7 @@ if __name__ == '__main__':
 
 			norm_improb(a, b, c)
 
-			print("[" + str(iteration) + "] iterations... triskew = " + str(triskew) + " bigskew = " + str(bigskew) + " smallskew = " + str(smallskew) + " alphaskew =" + str(alphaskew))
-
-			if args.graph:
-				avg = 0
-				for x in improbs:
-					avg += x
-
-				average = avg / len(improbs)
-
-				animate(average)
-				fig.canvas.draw()
+			print("[" + str(iteration) + "] iterations...")
 
 			iteration += 1
 
@@ -272,7 +263,7 @@ if __name__ == '__main__':
 			decision = decision(average)
 			print("Decision:", decision)
 
-	elif args.epochs:
+	elif args.epochs and not args.graph:
 
 		print("Starting calculation for " + str(args.epochs) + " epochs of improbability...")
 		time.sleep(3)
@@ -312,7 +303,11 @@ if __name__ == '__main__':
 		print("Starting calculation for infinite* improbability...")
 		time.sleep(3)
 
-		while c > b or a > c or b > c:
+		start_time = dt.datetime.today().timestamp()
+
+		finite_improb = rand()
+
+		while finite_improb != rand():
 
 			a = (0 + (rand() * (100000000 - 0)))
 			b = (0 + (rand() * (100000000 - 0)))
@@ -323,7 +318,9 @@ if __name__ == '__main__':
 
 			norm_improb(a, b, c)
 
-			print("[" + str(iteration) + "] iterations... triskew = " + str(triskew) + " bigskew = " + str(bigskew) + " smallskew = " + str(smallskew) + " alphaskew =" + str(alphaskew))
+			time_diff = dt.datetime.today().timestamp() - start_time
+
+			print("[" + str(iteration) + "] iterations at " + str(iteration // time_diff) + " iter per sec...")
 
 			if args.graph:
 
