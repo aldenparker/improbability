@@ -148,8 +148,8 @@ def decision(probability):
 	return rand() < probability
 
 
-def epoch(parts):
-	global iteration, improbs, args
+def epoch(parts, args):
+	global iteration, improbs
 
 	iteration = 0
 
@@ -185,6 +185,7 @@ def epoch(parts):
 	print(str(iteration) + " iterations for epoch " + str(x) + " ending with an improbability factor of " + str(average))
 
 	parts.append(average)
+
 
 if __name__ == '__main__':
 	xs = []
@@ -276,7 +277,7 @@ if __name__ == '__main__':
 			parts = manager.list()  # <-- can be shared between processes.
 
 			for x in range(0, args.epochs):
-				proc = multiprocessing.Process(target=epoch, args=(parts,))
+				proc = multiprocessing.Process(target=epoch, args=(parts, args))
 				procs.append(proc)
 				proc.start()
 
